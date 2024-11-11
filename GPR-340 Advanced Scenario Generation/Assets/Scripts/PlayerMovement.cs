@@ -1,41 +1,57 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Timeline;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] float speed = 5f;
-    [SerializeField] float mouseSens = 1f;
+    [SerializeField] float mouseSens = 40f;
     [SerializeField] float sprintSpeed = 4f;
-    public Transform playerCamera;
 
     float xRotation = 0f;
+    float yRotation = 0f;
 
     private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void Update()
     {
+        //WASD Movement
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
         Vector3 direction = transform.forward * vertical + transform.right * horizontal;
         transform.Translate(direction * speed * Time.deltaTime, Space.World);
 
-        float mouseX = Input.GetAxis("Mouse X");
-        float mouseY = Input.GetAxis("Mouse Y");
+        //Camera Rotation        
+        if (Input.GetMouseButtonDown(1) && Cursor.lockState == CursorLockMode.None)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
-        transform.Rotate(Vector3.up * mouseX * mouseSens);
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            float mouseX = Input.GetAxis("Mouse X");
+            float mouseY = Input.GetAxis("Mouse Y");
 
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-        playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+            xRotation -= mouseY * Time.deltaTime * mouseSens;
+            yRotation += mouseX * Time.deltaTime * mouseSens;
+            xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
-        if(Input.GetKeyDown(KeyCode.LeftShift))
+            transform.localEulerAngles = new Vector3(xRotation, yRotation, 0f);
+        }
+
+        if (Input.GetMouseButtonUp(1))
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             speed *= sprintSpeed;
         }
@@ -51,6 +67,11 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.E))
         {
             transform.position += new Vector3(0f, -transform.up.y * speed * Time.deltaTime, 0f);
+        }
+
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
         }
     }
 }
